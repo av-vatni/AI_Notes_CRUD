@@ -1,15 +1,13 @@
-import { useEffect } from "react";
+import NoteEditor from "./components/NoteEditor";
+import NotesList from "./components/NotesList";
 
-
-
-function App() {
-  useEffect(() => {
-    fetch('http://localhost:5000')
-      .then(res => res.text())
-      .then(data => console.log(data));
-  }, []);
-  
-  return <h1 className="text-3xl font-bold text-center">Hello New Project it is!!!</h1>;
+ function App(){
+  return (
+    <div className="max-w-4xl mx-auto p-4">
+      <h1 className="text-3xl font-bold mb-4">📝 AI Notes</h1>
+      <NoteEditor onNoteSaved={() => window.location.reload()} />
+      <NotesList/>
+    </div>
+  )
 }
-
-export default App
+export default App;

@@ -1,5 +1,5 @@
+// filepath: e:\Backend\AI_Notes_CRUD\client\my-project\src\components\NoteEditor.jsx
 import { useState } from "react";
-import { RichTextEditor } from "@mantine/rte";
 import { createNote } from "../api/notes";
 
 export default function NoteEditor({ onNoteSaved }) {
@@ -8,10 +8,14 @@ export default function NoteEditor({ onNoteSaved }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const res = await createNote({ title, content });
-    onNoteSaved(res.data);
-    setTitle("");
-    setContent("");
+    try {
+      const res = await createNote({ title, content });
+      onNoteSaved(res.data);
+      setTitle("");
+      setContent("");
+    } catch (error) {
+      console.error("Error creating note:", error);
+    }
   };
 
   return (
@@ -23,7 +27,12 @@ export default function NoteEditor({ onNoteSaved }) {
         placeholder="Note Title"
         className="w-full p-2 border border-gray-300 rounded mb-2"
       />
-      <RichTextEditor value={content} onChange={setContent} />
+      <textarea
+        value={content}
+        onChange={(e) => setContent(e.target.value)}
+        placeholder="Note Content"
+        className="w-full p-2 border border-gray-300 rounded mb-2"
+      />
       <button className="mt-2 bg-blue-500 text-white px-4 py-2 rounded">
         Save Note
       </button>

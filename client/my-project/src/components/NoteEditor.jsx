@@ -1,21 +1,21 @@
-// filepath: e:\Backend\AI_Notes_CRUD\client\my-project\src\components\NoteEditor.jsx
 import { useState } from "react";
 import { createNote } from "../api/notes";
 
 export default function NoteEditor({ onNoteSaved }) {
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
+  const [tags, setTags] = useState("");
+  const [folder, setFolder] = useState("");
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    try {
-      const res = await createNote({ title, content });
-      onNoteSaved(res.data);
-      setTitle("");
-      setContent("");
-    } catch (error) {
-      console.error("Error creating note:", error);
-    }
+    const tagsArray = tags.split(",").map(tag => tag.trim());
+    const res = await createNote({ title, content, tags: tagsArray, folder });
+    onNoteSaved(res.data);
+    setTitle("");
+    setContent("");
+    setTags("");
+    setFolder("");
   };
 
   return (
@@ -31,6 +31,21 @@ export default function NoteEditor({ onNoteSaved }) {
         value={content}
         onChange={(e) => setContent(e.target.value)}
         placeholder="Note Content"
+        className="w-full p-2 border border-gray-300 rounded mb-2"
+        rows={5}
+      />
+      <input
+        type="text"
+        value={tags}
+        onChange={(e) => setTags(e.target.value)}
+        placeholder="Tags (comma separated)"
+        className="w-full p-2 border border-gray-300 rounded mb-2"
+      />
+      <input
+        type="text"
+        value={folder}
+        onChange={(e) => setFolder(e.target.value)}
+        placeholder="Folder"
         className="w-full p-2 border border-gray-300 rounded mb-2"
       />
       <button className="mt-2 bg-blue-500 text-white px-4 py-2 rounded">

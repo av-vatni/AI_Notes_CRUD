@@ -1,11 +1,16 @@
+<<<<<<< HEAD
 // filepath: e:\Backend\AI_Notes_CRUD\client\my-project\src\components\NoteEditor.jsx
 import { useState, useRef } from "react";
+=======
+import { useState } from "react";
+>>>>>>> 482b7aec41c7a74d942c5107ba61ac056352695e
 import { createNote } from "../api/notes";
 import { Mic, MicOff, FolderOpen, Pin } from "lucide-react";
 
 export default function NoteEditor({ onNoteSaved }) {
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
+<<<<<<< HEAD
   const [tags, setTags] = useState([]);
   const [folder, setFolder] = useState("General");
   const [isPinned, setIsPinned] = useState(false);
@@ -42,6 +47,20 @@ export default function NoteEditor({ onNoteSaved }) {
     } catch (error) {
       console.error("Error creating note:", error);
     }
+=======
+  const [tags, setTags] = useState("");
+  const [folder, setFolder] = useState("");
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    const tagsArray = tags.split(",").map(tag => tag.trim());
+    const res = await createNote({ title, content, tags: tagsArray, folder });
+    onNoteSaved(res.data);
+    setTitle("");
+    setContent("");
+    setTags("");
+    setFolder("");
+>>>>>>> 482b7aec41c7a74d942c5107ba61ac056352695e
   };
 
   const addTag = (e) => {
@@ -107,6 +126,7 @@ export default function NoteEditor({ onNoteSaved }) {
   ];
 
   return (
+<<<<<<< HEAD
     <div className="p-6 bg-white rounded-lg shadow-lg mb-6">
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-xl font-semibold text-gray-800">Create New Note</h2>
@@ -246,5 +266,40 @@ export default function NoteEditor({ onNoteSaved }) {
         </div>
       </form>
     </div>
+=======
+    <form onSubmit={handleSubmit} className="p-4 bg-white rounded shadow">
+      <input
+        type="text"
+        value={title}
+        onChange={(e) => setTitle(e.target.value)}
+        placeholder="Note Title"
+        className="w-full p-2 border border-gray-300 rounded mb-2"
+      />
+      <textarea
+        value={content}
+        onChange={(e) => setContent(e.target.value)}
+        placeholder="Note Content"
+        className="w-full p-2 border border-gray-300 rounded mb-2"
+        rows={5}
+      />
+      <input
+        type="text"
+        value={tags}
+        onChange={(e) => setTags(e.target.value)}
+        placeholder="Tags (comma separated)"
+        className="w-full p-2 border border-gray-300 rounded mb-2"
+      />
+      <input
+        type="text"
+        value={folder}
+        onChange={(e) => setFolder(e.target.value)}
+        placeholder="Folder"
+        className="w-full p-2 border border-gray-300 rounded mb-2"
+      />
+      <button className="mt-2 bg-blue-500 text-white px-4 py-2 rounded">
+        Save Note
+      </button>
+    </form>
+>>>>>>> 482b7aec41c7a74d942c5107ba61ac056352695e
   );
 }

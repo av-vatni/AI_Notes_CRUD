@@ -4,7 +4,7 @@ import { summarizeNote, expandNote, generateTags } from "../api/ai";
 import { Search, Filter, Tag, FolderOpen, Pin, Archive, Edit, Trash2, Sparkles, Highlighter } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 
-export default function NotesList() {
+export default function NotesList({ searchQuery }) {
   const [notes, setNotes] = useState([]);
   const [filteredNotes, setFilteredNotes] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
@@ -197,7 +197,13 @@ export default function NotesList() {
     );
   };
 
+  const filteredNotes = notes.filter(note =>
+    note.title.toLowerCase().includes(searchQuery) ||
+    (note.tags && note.tags.some(tag => tag.toLowerCase().includes(searchQuery)))
+  );
+
   return (
+<<<<<<< HEAD
     <div className="space-y-6">
       {/* Search and Filter Bar */}
       <div className="bg-white p-4 rounded-lg shadow">
@@ -260,6 +266,25 @@ export default function NotesList() {
               {sortOrder === 'asc' ? '↑' : '↓'}
             </button>
           </div>
+=======
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+      {filteredNotes.map((note) => (
+        <div key={note._id} className="border p-4 rounded shadow bg-white">
+          <h2 className="font-bold text-lg">{note.title}</h2>
+          <p className="text-sm text-gray-600">Folder: {note.folder || 'None'}</p>
+          <p>{note.content}</p>
+          <div className="mt-2 text-sm text-gray-500">
+            {note.tags && note.tags.length > 0 && (
+              <div>Tags: {note.tags.join(", ")}</div>
+            )}
+          </div>
+          <button
+            onClick={() => handleDelete(note._id)}
+            className="mt-2 text-red-500"
+          >
+            Delete
+          </button>
+>>>>>>> 482b7aec41c7a74d942c5107ba61ac056352695e
         </div>
 
         {/* Quick Filters */}
@@ -458,3 +483,4 @@ export default function NotesList() {
     </div>
   );
 }
+

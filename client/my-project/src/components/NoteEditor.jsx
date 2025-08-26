@@ -1,16 +1,13 @@
-<<<<<<< HEAD
 // filepath: e:\Backend\AI_Notes_CRUD\client\my-project\src\components\NoteEditor.jsx
 import { useState, useRef } from "react";
-=======
-import { useState } from "react";
->>>>>>> 482b7aec41c7a74d942c5107ba61ac056352695e
+import ReactQuill from "react-quill";
+import "react-quill/dist/quill.snow.css";
 import { createNote } from "../api/notes";
-import { Mic, MicOff, FolderOpen, Pin } from "lucide-react";
+import { Mic, MicOff, Tag, FolderOpen, Pin } from "lucide-react";
 
 export default function NoteEditor({ onNoteSaved }) {
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
-<<<<<<< HEAD
   const [tags, setTags] = useState([]);
   const [folder, setFolder] = useState("General");
   const [isPinned, setIsPinned] = useState(false);
@@ -47,20 +44,6 @@ export default function NoteEditor({ onNoteSaved }) {
     } catch (error) {
       console.error("Error creating note:", error);
     }
-=======
-  const [tags, setTags] = useState("");
-  const [folder, setFolder] = useState("");
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    const tagsArray = tags.split(",").map(tag => tag.trim());
-    const res = await createNote({ title, content, tags: tagsArray, folder });
-    onNoteSaved(res.data);
-    setTitle("");
-    setContent("");
-    setTags("");
-    setFolder("");
->>>>>>> 482b7aec41c7a74d942c5107ba61ac056352695e
   };
 
   const addTag = (e) => {
@@ -126,7 +109,6 @@ export default function NoteEditor({ onNoteSaved }) {
   ];
 
   return (
-<<<<<<< HEAD
     <div className="p-6 bg-white rounded-lg shadow-lg mb-6">
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-xl font-semibold text-gray-800">Create New Note</h2>
@@ -153,14 +135,15 @@ export default function NoteEditor({ onNoteSaved }) {
             />
           </div>
 
-          {/* Content */}
+          {/* Rich Text Editor */}
           <div>
-            <textarea
+            <ReactQuill
               value={content}
-              onChange={(e) => setContent(e.target.value)}
+              onChange={setContent}
+              modules={quillModules}
+              formats={quillFormats}
               placeholder="Start writing your note..."
-              className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent min-h-[140px] resize-y"
-              rows={8}
+              style={{ height: 240 }}
             />
           </div>
 
@@ -245,20 +228,25 @@ export default function NoteEditor({ onNoteSaved }) {
           )}
 
           {/* Action Buttons */}
-          <div className="flex items-center justify-between mt-3">
-            <button
-              type="button"
-              onClick={isRecording ? stopVoiceRecording : startVoiceRecording}
-              className={`${isRecording ? 'bg-red-500 text-white hover:bg-red-600' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'} px-3 py-2 rounded-lg flex items-center gap-2`}
-              title={isRecording ? 'Stop Recording' : 'Start Voice Recording'}
-            >
-              {isRecording ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
-              <span className="text-sm">{isRecording ? 'Stop Recording' : 'Record Voice'}</span>
-            </button>
+          <div className="flex items-center justify-between pt-3">
+            <div className="flex space-x-2">
+              <button
+                type="button"
+                onClick={isRecording ? stopVoiceRecording : startVoiceRecording}
+                className={`p-2 rounded-lg ${
+                  isRecording 
+                    ? 'bg-red-500 text-white hover:bg-red-600' 
+                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                }`}
+                title={isRecording ? 'Stop Recording' : 'Start Voice Recording'}
+              >
+                {isRecording ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
+              </button>
+            </div>
 
             <button
               type="submit"
-              className="px-5 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
             >
               Save Note
             </button>
@@ -266,40 +254,5 @@ export default function NoteEditor({ onNoteSaved }) {
         </div>
       </form>
     </div>
-=======
-    <form onSubmit={handleSubmit} className="p-4 bg-white rounded shadow">
-      <input
-        type="text"
-        value={title}
-        onChange={(e) => setTitle(e.target.value)}
-        placeholder="Note Title"
-        className="w-full p-2 border border-gray-300 rounded mb-2"
-      />
-      <textarea
-        value={content}
-        onChange={(e) => setContent(e.target.value)}
-        placeholder="Note Content"
-        className="w-full p-2 border border-gray-300 rounded mb-2"
-        rows={5}
-      />
-      <input
-        type="text"
-        value={tags}
-        onChange={(e) => setTags(e.target.value)}
-        placeholder="Tags (comma separated)"
-        className="w-full p-2 border border-gray-300 rounded mb-2"
-      />
-      <input
-        type="text"
-        value={folder}
-        onChange={(e) => setFolder(e.target.value)}
-        placeholder="Folder"
-        className="w-full p-2 border border-gray-300 rounded mb-2"
-      />
-      <button className="mt-2 bg-blue-500 text-white px-4 py-2 rounded">
-        Save Note
-      </button>
-    </form>
->>>>>>> 482b7aec41c7a74d942c5107ba61ac056352695e
   );
 }

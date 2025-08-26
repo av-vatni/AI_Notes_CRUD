@@ -1,10 +1,10 @@
 import { useEffect, useState } from "react";
 import { getNotes, deleteNote, updateNote } from "../api/notes";
 import { summarizeNote, expandNote, generateTags } from "../api/ai";
-import { Search, Filter, Tag, FolderOpen, Pin, Archive, Edit, Trash2, Sparkles, Highlighter } from "lucide-react";
+import { Search, Filter, Tag, FolderOpen, Pin, Archive, Edit, Trash2, Sparkles } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 
-export default function NotesList({ searchQuery }) {
+export default function NotesList() {
   const [notes, setNotes] = useState([]);
   const [filteredNotes, setFilteredNotes] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
@@ -197,13 +197,7 @@ export default function NotesList({ searchQuery }) {
     );
   };
 
-  const filteredNotes = notes.filter(note =>
-    note.title.toLowerCase().includes(searchQuery) ||
-    (note.tags && note.tags.some(tag => tag.toLowerCase().includes(searchQuery)))
-  );
-
   return (
-<<<<<<< HEAD
     <div className="space-y-6">
       {/* Search and Filter Bar */}
       <div className="bg-white p-4 rounded-lg shadow">
@@ -266,25 +260,6 @@ export default function NotesList({ searchQuery }) {
               {sortOrder === 'asc' ? '↑' : '↓'}
             </button>
           </div>
-=======
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-      {filteredNotes.map((note) => (
-        <div key={note._id} className="border p-4 rounded shadow bg-white">
-          <h2 className="font-bold text-lg">{note.title}</h2>
-          <p className="text-sm text-gray-600">Folder: {note.folder || 'None'}</p>
-          <p>{note.content}</p>
-          <div className="mt-2 text-sm text-gray-500">
-            {note.tags && note.tags.length > 0 && (
-              <div>Tags: {note.tags.join(", ")}</div>
-            )}
-          </div>
-          <button
-            onClick={() => handleDelete(note._id)}
-            className="mt-2 text-red-500"
-          >
-            Delete
-          </button>
->>>>>>> 482b7aec41c7a74d942c5107ba61ac056352695e
         </div>
 
         {/* Quick Filters */}
@@ -394,11 +369,10 @@ export default function NotesList({ searchQuery }) {
                 />
               )}
 
-              {/* AI Summary */}
               {note.aiSummary && (
-                <div className="mt-2 p-2 bg-purple-50 border border-purple-200 rounded text-xs text-purple-800">
-                  <div className="flex items-center gap-1 font-semibold mb-1"><Highlighter className="w-3 h-3" /> AI Summary</div>
-                  <div className="whitespace-pre-wrap">{note.aiSummary}</div>
+                <div className="mt-3 p-3 rounded border border-purple-200 bg-purple-50 text-purple-800 text-xs whitespace-pre-wrap">
+                  <div className="font-semibold mb-1">AI Summary</div>
+                  {note.aiSummary}
                 </div>
               )}
 
@@ -483,4 +457,3 @@ export default function NotesList({ searchQuery }) {
     </div>
   );
 }
-

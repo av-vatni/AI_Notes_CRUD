@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 
-// Creating note schema
 const NoteSchema = new mongoose.Schema({
+
     title: { type: String, required: true },
     content: { type: String, default: '' },
     tags: [{ type: String }],

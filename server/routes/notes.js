@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const Note = require('../models/Note');
 
-// Create
+
 router.post('/', async (req, res) => {
     const { title, content, tags, folder, isPinned } = req.body;
     try {

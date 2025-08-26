@@ -112,7 +112,7 @@ router.post('/generate-tags/:noteId', async (req, res) => {
 
         const genAI = new GoogleGenerativeAI(providedKey);
         const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
-        const prompt = `Suggest 3-5 concise tags for the following note. Return ONLY a JSON array of lowercase tag strings (no extra text).\n\nTitle: ${note.title}\nContent (HTML allowed):\n${note.content}`;
+        const prompt = `Suggest 3-5 concise tags for the following note. Return a JSON array of lowercase tag strings only.\n\nTitle: ${note.title}\nContent (HTML allowed):\n${note.content}`;
 
         let uniqueTags = [];
         try {

@@ -37,13 +37,7 @@ router.get('/', async (req, res) => {
         
         let query = { userId: req.user._id };
         
-        // Add user filtering when auth is implemented
-        // if (req.user?.id) {
-        //     query.userId = req.user.id;
-        // }
-        
         if (search && search.trim()) {
-            // Use regex search instead of text index for better compatibility
             const searchRegex = new RegExp(search.trim(), 'i');
             query.$or = [
                 { title: searchRegex },
@@ -69,7 +63,7 @@ router.get('/', async (req, res) => {
         const notes = await Note.find(query)
             .sort(sortOptions)
             .select('-__v')
-            .limit(1000); // Prevent excessive data retrieval
+            .limit(1000);
             
         console.log(`📝 Retrieved ${notes.length} notes`);
         res.json(notes);

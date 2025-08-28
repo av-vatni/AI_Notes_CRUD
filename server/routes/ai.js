@@ -71,7 +71,15 @@ router.post('/expand/:noteId', async (req, res) => {
         const genAI = new GoogleGenerativeAI(providedKey);
         const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
         const styleInstruction = expansionType === 'creative' ? 'Add creative perspectives and examples' : expansionType === 'academic' ? 'Add academic rigor, references, and methodology suggestions' : 'Add detailed explanations and actionable steps';
-        const prompt = `Expand the following note. Maintain the original content and append an expanded section with a clear heading. Use the style: ${styleInstruction}. Keep it concise (200-300 words).\n\nOriginal note title: ${note.title}\nOriginal content (HTML allowed):\n${note.content}`;
+        const prompt = `Expand the following note by APPENDING a concise section ONLY. IMPORTANT RULES:
+- Return an HTML FRAGMENT only. Do NOT include \`\`\` code fences, <!DOCTYPE>, <html>, <head>, or <body>.
+- Allowed tags: <h3>, <p>, <ul>, <ol>, <li>, <strong>, <em> only.
+- Do NOT repeat original content. Start with <h3>Expanded Details & Actionable Steps</h3> then add a few <p> and list items.
+- Keep it concise (120-220 words). Use the style: ${styleInstruction}.
+
+Context title: ${note.title}
+Original content (HTML allowed):
+${note.content}`;
 
         let expandedAppend = '';
         try {
@@ -79,6 +87,36 @@ router.post('/expand/:noteId', async (req, res) => {
             expandedAppend = result.response.text().trim();
         } catch (gemErr) {
             return res.status(502).json({ error: 'Gemini request failed', details: String(gemErr?.message || gemErr) });
+        }
+
+        // Normalize to a clean HTML fragment: strip code fences and document wrappers
+        const extractFromFences = (text) => {
+            const fence = text.match(/```(?:html)?\s*([\s\S]*?)\s*```/i);
+            return fence ? fence[1].trim() : text;
+        };
+        const stripDocWrappers = (text) => {
+            // Remove doctype
+            let out = text.replace(/<!DOCTYPE[^>]*>/gi, '').trim();
+            // Remove <html>, <head> and keep body inner if present
+            const bodyMatch = out.match(/<body[^>]*>([\s\S]*?)<\/body>/i);
+            if (bodyMatch) out = bodyMatch[1].trim();
+            out = out.replace(/<\/?html[^>]*>/gi, '')
+                     .replace(/<head[^>]*>[\s\S]*?<\/head>/gi, '')
+                     .replace(/<\/?body[^>]*>/gi, '')
+                     .trim();
+            return out;
+        };
+        const ensureAllowedTags = (text) => {
+            // Very light filter: remove script/style tags entirely
+            return text.replace(/<\/?(script|style)[^>]*>[\s\S]*?<\/(script|style)>/gi, '').trim();
+        };
+
+        expandedAppend = extractFromFences(expandedAppend);
+        expandedAppend = stripDocWrappers(expandedAppend);
+        expandedAppend = ensureAllowedTags(expandedAppend);
+        // As a final guard, if output lacks <h3>, prepend it
+        if (!/<h3[ >]/i.test(expandedAppend)) {
+            expandedAppend = `<h3>Expanded Details & Actionable Steps</h3>` + expandedAppend;
         }
 
         const expandedContent = `${note.content}\n\n${expandedAppend}`;
@@ -112,12 +150,21 @@ router.post('/generate-tags/:noteId', async (req, res) => {
 
         const genAI = new GoogleGenerativeAI(providedKey);
         const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
-        const prompt = `Suggest 3-5 concise tags for the following note. Return a JSON array of lowercase tag strings only.\n\nTitle: ${note.title}\nContent (HTML allowed):\n${note.content}`;
+        const prompt = `Suggest 3-5 concise tags for the following note. Return ONLY a JSON array of lowercase tag strings (e.g., ["project", "meeting"]). No extra text.\n\nTitle: ${note.title}\nContent (HTML allowed):\n${note.content}`;
 
         let uniqueTags = [];
         try {
             const result = await model.generateContent(prompt);
-            const text = result.response.text().trim() || '[]';
+            let text = result.response.text().trim() || '[]';
+            // Try to extract JSON array if wrapped in code fences or prose
+            const fenceMatch = text.match(/```(?:json)?\s*([\s\S]*?)\s*```/i);
+            if (fenceMatch) {
+                text = fenceMatch[1].trim();
+            }
+            const arrayMatch = text.match(/\[([\s\S]*?)\]/);
+            if (arrayMatch && text.trim()[0] !== '[') {
+                text = `[${arrayMatch[1]}]`;
+            }
             try {
                 const parsed = JSON.parse(text);
                 if (Array.isArray(parsed)) {

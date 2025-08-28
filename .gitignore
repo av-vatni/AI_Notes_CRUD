@@ -1,2 +1,18 @@
-node_modules
-node_modules
+# Node.js dependencies
+**/node_modules/
+
+# Environment files
+.env
+**/.env
+
+# Logs
+npm-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Build artifacts
+**/dist/
+**/build/
+
+# OS files
+.DS_Store

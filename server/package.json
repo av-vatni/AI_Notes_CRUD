@@ -4,7 +4,9 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "dev": "nodemon index.js"
+    "dev": "nodemon start.js",
+    "start": "node start.js",
+    "init-db": "node init-db.js"
   },
   "keywords": [],
   "author": "",

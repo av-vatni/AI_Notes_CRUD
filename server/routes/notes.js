@@ -2,20 +2,31 @@ const express = require('express');
 const router = express.Router();
 const Note = require('../models/Note');
 
-
 router.post('/', async (req, res) => {
     const { title, content, tags, folder, isPinned } = req.body;
+    
+    // Validate required fields
+    if (!title || !title.trim()) {
+        return res.status(400).json({ error: 'Title is required' });
+    }
+    
     try {
+        const userId = req.user._id;
+        
         const note = await Note.create({
-            title,
-            content,
-            tags: tags || [],
+            title: title.trim(),
+            content: content || '',
+            tags: Array.isArray(tags) ? tags.filter(tag => tag && tag.trim()) : [],
             folder: folder || 'General',
-            isPinned: isPinned || false
+            isPinned: isPinned || false,
+            userId: userId
         });
-        res.json(note);
+        
+        console.log(`✅ Note created: ${note.title} (ID: ${note._id})`);
+        res.status(201).json(note);
     } catch (err) {
-        res.status(500).json({ error: err.message });
+        console.error('❌ Error creating note:', err);
+        res.status(500).json({ error: 'Failed to create note', details: err.message });
     }
 });
 
@@ -24,34 +35,47 @@ router.get('/', async (req, res) => {
     try {
         const { search, tags, folder, sortBy = 'updatedAt', order = 'desc' } = req.query;
         
-        let query = {};
+        let query = { userId: req.user._id };
         
-        // Search functionality
-        if (search) {
-            query.$text = { $search: search };
+        // Add user filtering when auth is implemented
+        // if (req.user?.id) {
+        //     query.userId = req.user.id;
+        // }
+        
+        if (search && search.trim()) {
+            // Use regex search instead of text index for better compatibility
+            const searchRegex = new RegExp(search.trim(), 'i');
+            query.$or = [
+                { title: searchRegex },
+                { content: searchRegex },
+                { tags: searchRegex }
+            ];
         }
         
-        // Filter by tags
-        if (tags) {
-            query.tags = { $in: tags.split(',') };
+        if (tags && tags.trim()) {
+            const tagArray = tags.split(',').map(tag => tag.trim()).filter(tag => tag);
+            if (tagArray.length > 0) {
+                query.tags = { $in: tagArray };
+            }
         }
         
-        // Filter by folder
-        if (folder) {
-            query.folder = folder;
+        if (folder && folder.trim()) {
+            query.folder = folder.trim();
         }
         
-        // Sorting
         const sortOptions = {};
         sortOptions[sortBy] = order === 'desc' ? -1 : 1;
         
         const notes = await Note.find(query)
             .sort(sortOptions)
-            .select('-__v');
+            .select('-__v')
+            .limit(1000); // Prevent excessive data retrieval
             
+        console.log(`📝 Retrieved ${notes.length} notes`);
         res.json(notes);
     } catch (err) {
-        res.status(500).json({ error: err.message });
+        console.error('❌ Error retrieving notes:', err);
+        res.status(500).json({ error: 'Failed to retrieve notes', details: err.message });
     }
 });
 

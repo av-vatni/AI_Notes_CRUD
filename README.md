@@ -34,10 +34,10 @@ npm run dev # Start the client
 ```
 Open your browser to http://localhost:5173.
 
-###📂Project Structure
+### 📂Project Structure
 ```bash
 AI_Notes_CRUD/
 ├── server/         # Backend API (Node.js, Express, MongoDB)
 ├── client/my-project/   # Frontend (React, Vite, Tailwind CSS)
-└──
+└── README.md
 ```

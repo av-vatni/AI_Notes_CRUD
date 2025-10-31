@@ -27,7 +27,7 @@ router.post('/summary/:noteId', async (req, res) => {
         }
 
         const genAI = new GoogleGenerativeAI(providedKey);
-        const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+        const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
         const prompt = `Summarize the following note in 2-3 sentences, focusing on the key ideas and action items. Return only the summary.\n\nTitle: ${note.title}\nContent (HTML allowed):\n${note.content}`;
 
         let aiSummary = '';
@@ -69,7 +69,7 @@ router.post('/expand/:noteId', async (req, res) => {
         }
 
         const genAI = new GoogleGenerativeAI(providedKey);
-        const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+        const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
         const styleInstruction = expansionType === 'creative' ? 'Add creative perspectives and examples' : expansionType === 'academic' ? 'Add academic rigor, references, and methodology suggestions' : 'Add detailed explanations and actionable steps';
         const prompt = `Expand the following note by APPENDING a concise section ONLY. IMPORTANT RULES:
 - Return an HTML FRAGMENT only. Do NOT include \`\`\` code fences, <!DOCTYPE>, <html>, <head>, or <body>.
@@ -149,7 +149,7 @@ router.post('/generate-tags/:noteId', async (req, res) => {
         }
 
         const genAI = new GoogleGenerativeAI(providedKey);
-        const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+        const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
         const prompt = `Suggest 3-5 concise tags for the following note. Return ONLY a JSON array of lowercase tag strings (e.g., ["project", "meeting"]). No extra text.\n\nTitle: ${note.title}\nContent (HTML allowed):\n${note.content}`;
 
         let uniqueTags = [];

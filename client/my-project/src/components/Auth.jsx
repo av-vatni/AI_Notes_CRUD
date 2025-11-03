@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { LogIn, UserPlus, Eye, EyeOff } from "lucide-react";
+import config from "../config";
 
 export default function Auth({ onAuthSuccess, onClose }) {
   const [isLogin, setIsLogin] = useState(true);
@@ -31,7 +32,7 @@ export default function Auth({ onAuthSuccess, onClose }) {
         ? { email: formData.email, password: formData.password }
         : { username: formData.username, email: formData.email, password: formData.password };
 
-      const response = await fetch(`http://localhost:5000${endpoint}`, {
+      const response = await fetch(`${config.apiUrl}${endpoint}`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

@@ -13,10 +13,18 @@ const auth = require('./middleware/auth');
 const app = express();
 
 // Middleware
-app.use(cors({
-    origin: config.clientUrl,
-    credentials: true
-}));
+const corsOptions = {};
+if (config.clientUrl) {
+  corsOptions.origin = config.clientUrl;
+  corsOptions.credentials = true;
+} else {
+  // No CLIENT_URL provided — allow all origins (useful for quick testing).
+  // In production you should set CLIENT_URL in your Render environment to the Vercel URL.
+  console.warn('⚠️ CLIENT_URL not set. CORS will allow all origins. Set CLIENT_URL in your server env for stricter security.');
+  corsOptions.origin = true;
+  corsOptions.credentials = true;
+}
+app.use(cors(corsOptions));
 app.use(express.json());
 
 // Connect to MongoDB (simplified, initial-style config)

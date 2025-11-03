@@ -1,8 +1,10 @@
 const express = require("express");
 const cors = require("cors");
 const mongoose = require("mongoose");
+const path = require("path");
 require("dotenv").config();
 
+const config = require('./config');
 const notesRoutes = require('./routes/notes');
 const authRoutes = require('./routes/auth');
 const aiRoutes = require('./routes/ai');
@@ -11,7 +13,10 @@ const auth = require('./middleware/auth');
 const app = express();
 
 // Middleware
-app.use(cors());
+app.use(cors({
+    origin: config.clientUrl,
+    credentials: true
+}));
 app.use(express.json());
 
 // Connect to MongoDB (simplified, initial-style config)

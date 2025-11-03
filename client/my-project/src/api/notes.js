@@ -1,10 +1,9 @@
 import axios from 'axios';
-
-const API = 'http://localhost:5000/api/notes';
+import config from '../config';
 
 // Create axios instance with better configuration
 const apiClient = axios.create({
-  baseURL: 'http://localhost:5000/api',
+  baseURL: `${config.apiUrl}/api`,
   timeout: 10000,
   headers: {
     'Content-Type': 'application/json',

@@ -1,10 +1,12 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef, useMemo, useCallback } from "react";
 import ReactQuill from "react-quill";
 import "react-quill/dist/quill.snow.css";
 import { getNotes, deleteNote, updateNote } from "../api/notes";
 import { summarizeNote, expandNote, generateTags } from "../api/ai";
+import { uploadImageBase64 } from "../api/upload";
 import { Search, Filter, Tag, FolderOpen, Pin, Archive, Edit, Trash2, Sparkles } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
+import config from "../config";
 
 export default function NotesList({ refreshKey }) {
   const [notes, setNotes] = useState([]);
@@ -21,6 +23,8 @@ export default function NotesList({ refreshKey }) {
   const [editTitle, setEditTitle] = useState("");
   const [editContent, setEditContent] = useState("");
   const [busyId, setBusyId] = useState(null);
+  const quillRefs = useRef({});
+  const currentEditingNoteRef = useRef(null);
 
   const fetchNotes = async () => {
     try {
@@ -183,6 +187,7 @@ export default function NotesList({ refreshKey }) {
 
   const startEdit = (note) => {
     setEditingNote(note._id);
+    currentEditingNoteRef.current = note._id;
     setEditTitle(note.title);
     setEditContent(note.content);
   };
@@ -191,24 +196,91 @@ export default function NotesList({ refreshKey }) {
     try {
       await updateNote(editingNote, { title: editTitle, content: editContent });
       setEditingNote(null);
+      currentEditingNoteRef.current = null;
       setEditTitle("");
       setEditContent("");
       fetchNotes();
     } catch (error) {
       console.error("Error updating note:", error);
+      const errorMessage = error?.response?.data?.error || error?.response?.data?.details || error.message || 'Unknown error occurred';
+      alert(`Failed to update note: ${errorMessage}`);
     }
   };
 
-  const quillModules = {
-    toolbar: [
-      [{ 'header': [1, 2, 3, false] }],
-      ['bold', 'italic', 'underline', 'strike'],
-      [{ 'list': 'ordered'}, { 'list': 'bullet' }],
-      [{ 'color': [] }, { 'background': [] }],
-      ['link', 'image'],
-      ['clean']
-    ],
-  };
+  // Custom image handler for ReactQuill
+  const imageHandler = useCallback(async (quillInstance) => {
+    const input = document.createElement('input');
+    input.setAttribute('type', 'file');
+    input.setAttribute('accept', 'image/*');
+    input.click();
+
+    input.onchange = async () => {
+      const file = input.files?.[0];
+      if (!file) return;
+
+      // Check file size (5MB limit)
+      if (file.size > 5 * 1024 * 1024) {
+        alert('Image is too large. Maximum size is 5MB. Please compress the image and try again.');
+        return;
+      }
+
+      // Convert file to base64
+      const reader = new FileReader();
+      reader.onload = async (e) => {
+        const base64Image = e.target?.result;
+        if (!base64Image || !quillInstance) return;
+
+        try {
+          // Upload to server
+          const result = await uploadImageBase64(base64Image);
+          
+          // Get the full URL
+          const imageUrl = result.url.startsWith('http') 
+            ? result.url 
+            : `${config.apiUrl}${result.url}`;
+          
+          // Get current selection range
+          const range = quillInstance.getSelection(true);
+          
+          // Insert image at cursor position
+          quillInstance.insertEmbed(range.index, 'image', imageUrl);
+          
+          // Move cursor after image
+          quillInstance.setSelection(range.index + 1);
+        } catch (error) {
+          console.error('Error uploading image:', error);
+          const errorMessage = error?.response?.data?.error || error.message || 'Failed to upload image';
+          alert(`Image upload failed: ${errorMessage}`);
+        }
+      };
+      
+      reader.readAsDataURL(file);
+    };
+  }, []);
+
+  // Create a stable modules configuration
+  // Only depends on imageHandler which is stable (useCallback with empty deps)
+  const quillModules = useMemo(() => ({
+    toolbar: {
+      container: [
+        [{ 'header': [1, 2, 3, false] }],
+        ['bold', 'italic', 'underline', 'strike'],
+        [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+        [{ 'color': [] }, { 'background': [] }],
+        ['link', 'image'],
+        ['clean']
+      ],
+      handlers: {
+        image: () => {
+          // Get the currently editing note's quill instance from ref
+          const noteId = currentEditingNoteRef.current;
+          if (noteId && quillRefs.current[noteId]) {
+            imageHandler(quillRefs.current[noteId]);
+          }
+        }
+      }
+    }
+  }), [imageHandler]); // imageHandler is stable (useCallback with empty deps)
 
   const quillFormats = [
     'header',
@@ -276,6 +348,7 @@ export default function NotesList({ refreshKey }) {
 
   const cancelEdit = () => {
     setEditingNote(null);
+    currentEditingNoteRef.current = null;
     setEditTitle("");
     setEditContent("");
   };
@@ -459,6 +532,13 @@ export default function NotesList({ refreshKey }) {
               {editingNote === note._id ? (
                 <div className="border border-gray-200 rounded-lg overflow-hidden">
                   <ReactQuill
+                    ref={(el) => {
+                      if (el) {
+                        quillRefs.current[note._id] = el.getEditor();
+                      } else {
+                        delete quillRefs.current[note._id];
+                      }
+                    }}
                     value={editContent}
                     onChange={setEditContent}
                     modules={quillModules}

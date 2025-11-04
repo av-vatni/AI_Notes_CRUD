@@ -96,6 +96,25 @@ router.get('/:id', async (req, res) => {
 router.put('/:id', async (req, res) => {
     try {
         const { title, content, tags, folder, isPinned, isArchived } = req.body;
+        
+        // Validate content size (MongoDB document limit is 16MB, but we'll be more conservative)
+        if (content && content.length > 10 * 1024 * 1024) { // 10MB limit
+            return res.status(400).json({ 
+                error: 'Content too large. Please reduce image sizes or remove some images.',
+                details: `Content size: ${(content.length / 1024 / 1024).toFixed(2)}MB (max 10MB)`
+            });
+        }
+        
+        // Check if note belongs to user
+        const existingNote = await Note.findById(req.params.id);
+        if (!existingNote) {
+            return res.status(404).json({ error: 'Note not found' });
+        }
+        
+        if (existingNote.userId.toString() !== req.user._id.toString()) {
+            return res.status(403).json({ error: 'Unauthorized to update this note' });
+        }
+        
         const updateData = {
             title,
             content,
@@ -105,6 +124,11 @@ router.put('/:id', async (req, res) => {
             isArchived,
             updatedAt: Date.now()
         };
+        
+        // Remove undefined fields
+        Object.keys(updateData).forEach(key => 
+            updateData[key] === undefined && delete updateData[key]
+        );
         
         const updatedNote = await Note.findByIdAndUpdate(
             req.params.id, 
@@ -118,7 +142,28 @@ router.put('/:id', async (req, res) => {
         
         res.json(updatedNote);
     } catch (err) {
-        res.status(500).json({ error: err.message });
+        console.error('❌ Error updating note:', err);
+        // Log request context to help debugging
+        console.error('Request params:', req.params);
+        console.error('Request body keys:', Object.keys(req.body || {}));
+        console.error('Content length:', req.body?.content?.length);
+        
+        // Provide more specific error messages
+        if (err.name === 'ValidationError') {
+            return res.status(400).json({ 
+                error: 'Validation error', 
+                details: Object.values(err.errors).map(e => e.message).join(', ')
+            });
+        }
+        
+        if (err.name === 'CastError') {
+            return res.status(400).json({ error: 'Invalid note ID format' });
+        }
+        
+        res.status(500).json({ 
+            error: process.env.NODE_ENV === 'production' ? 'Internal Server Error' : err.message,
+            details: err.stack
+        });
     }
 });
 

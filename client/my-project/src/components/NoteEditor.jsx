@@ -1,9 +1,11 @@
 // filepath: e:\Backend\AI_Notes_CRUD\client\my-project\src\components\NoteEditor.jsx
-import { useState } from "react";
+import { useState, useRef, useMemo, useCallback } from "react";
 import ReactQuill from "react-quill";
 import "react-quill/dist/quill.snow.css";
 import { createNote } from "../api/notes";
+import { uploadImageBase64 } from "../api/upload";
 import { Tag, FolderOpen, Pin, X } from "lucide-react";
+import config from "../config";
 
 export default function NoteEditor({ onNoteSaved }) {
   const [title, setTitle] = useState("");
@@ -13,6 +15,7 @@ export default function NoteEditor({ onNoteSaved }) {
   const [isPinned, setIsPinned] = useState(false);
   const [tagInput, setTagInput] = useState("");
   const [showAdvanced, setShowAdvanced] = useState(false);
+  const quillRef = useRef(null);
   
 
   const handleSubmit = async (e) => {
@@ -56,16 +59,75 @@ export default function NoteEditor({ onNoteSaved }) {
 
   // Voice recording functionality removed
 
-  const quillModules = {
-    toolbar: [
-      [{ 'header': [1, 2, 3, false] }],
-      ['bold', 'italic', 'underline', 'strike'],
-      [{ 'list': 'ordered'}, { 'list': 'bullet' }],
-      [{ 'color': [] }, { 'background': [] }],
-      ['link', 'image'],
-      ['clean']
-    ],
-  };
+  // Custom image handler for ReactQuill
+  const imageHandler = useCallback(async () => {
+    const input = document.createElement('input');
+    input.setAttribute('type', 'file');
+    input.setAttribute('accept', 'image/*');
+    input.click();
+
+    input.onchange = async () => {
+      const file = input.files?.[0];
+      if (!file) return;
+
+      // Check file size (5MB limit)
+      if (file.size > 5 * 1024 * 1024) {
+        alert('Image is too large. Maximum size is 5MB. Please compress the image and try again.');
+        return;
+      }
+
+      // Convert file to base64
+      const reader = new FileReader();
+      reader.onload = async (e) => {
+        const base64Image = e.target?.result;
+        if (!base64Image || !quillRef.current) return;
+
+        try {
+          // Upload to server
+          const result = await uploadImageBase64(base64Image);
+          
+          // Get the full URL
+          const imageUrl = result.url.startsWith('http') 
+            ? result.url 
+            : `${config.apiUrl}${result.url}`;
+          
+          const quillInstance = quillRef.current.getEditor();
+          
+          // Get current selection range
+          const range = quillInstance.getSelection(true);
+          
+          // Insert image at cursor position
+          quillInstance.insertEmbed(range.index, 'image', imageUrl);
+          
+          // Move cursor after image
+          quillInstance.setSelection(range.index + 1);
+        } catch (error) {
+          console.error('Error uploading image:', error);
+          const errorMessage = error?.response?.data?.error || error.message || 'Failed to upload image';
+          alert(`Image upload failed: ${errorMessage}`);
+        }
+      };
+      
+      reader.readAsDataURL(file);
+    };
+  }, []);
+
+  // Create a stable modules configuration - no dependencies to prevent re-renders
+  const quillModules = useMemo(() => ({
+    toolbar: {
+      container: [
+        [{ 'header': [1, 2, 3, false] }],
+        ['bold', 'italic', 'underline', 'strike'],
+        [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+        [{ 'color': [] }, { 'background': [] }],
+        ['link', 'image'],
+        ['clean']
+      ],
+      handlers: {
+        image: imageHandler
+      }
+    }
+  }), [imageHandler]); // Only depends on imageHandler which is stable
 
   const quillFormats = [
     'header',
@@ -109,6 +171,7 @@ export default function NoteEditor({ onNoteSaved }) {
           {/* Rich Text Editor */}
           <div className="border border-gray-200 rounded-lg overflow-hidden">
             <ReactQuill
+              ref={quillRef}
               value={content}
               onChange={setContent}
               modules={quillModules}

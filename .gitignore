@@ -54,3 +54,7 @@ config.local.json
 **/.cache/
 **/.parcel-cache/
 **/.eslintcache/
+
+# Upload directories
+**/uploads/
+server/uploads/

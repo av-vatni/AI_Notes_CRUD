@@ -3,7 +3,7 @@ const mongoose = require('mongoose');
 const NoteSchema = new mongoose.Schema({
 
     title: { type: String, required: true },
-    content: { type: String, default: '' },
+    content: { type: String, required: [true, 'Content is required']},
     tags: [{ type: String }],
     folder: { type: String, default: 'General' },
     isPinned: { type: Boolean, default: false },

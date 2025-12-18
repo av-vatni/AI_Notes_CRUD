@@ -6,7 +6,9 @@
   "scripts": {
     "dev": "nodemon start.js",
     "start": "node start.js",
-    "init-db": "node init-db.js"
+    "init-db": "node init-db.js",
+    "test": "jest",
+    "test:unit": "jest tests/unit"
   },
   "keywords": [],
   "author": "",
@@ -23,6 +25,9 @@
     "multer": "^2.0.2"
   },
   "devDependencies": {
-    "nodemon": "^3.1.10"
+    "jest": "^30.2.0",
+    "mongodb-memory-server": "^11.0.0",
+    "nodemon": "^3.1.10",
+    "supertest": "^7.1.4"
   }
 }
